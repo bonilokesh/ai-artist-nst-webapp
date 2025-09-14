@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Artist Client</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3b82f6;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .preview-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            border: 2px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="container mx-auto p-8 max-w-2xl bg-white rounded-lg shadow-xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800">AI Artist Studio</h1>
+            <p class="text-gray-500 mt-2">Combine any photo with the style of a painting.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+                <label for="content-file" class="block mb-2 text-lg font-semibold text-gray-700">1. Your Photo (Content)</label>
+                <input type="file" id="content-file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <div class="mt-4 flex justify-center">
+                    <img id="content-preview" src="https://placehold.co/100x100/e2e8f0/cbd5e0?text=Content" alt="Content Preview" class="preview-img">
+                </div>
+            </div>
+            <div>
+                <label for="style-file" class="block mb-2 text-lg font-semibold text-gray-700">2. Painting (Style)</label>
+                <input type="file" id="style-file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                <div class="mt-4 flex justify-center">
+                    <img id="style-preview" src="https://placehold.co/100x100/e9d5ff/a855f7?text=Style" alt="Style Preview" class="preview-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mb-6">
+            <button id="stylize-button" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 text-lg">
+                Create Masterpiece
+            </button>
+        </div>
+        
+        <div id="status-area" class="text-center my-6 hidden">
+            <div id="loader" class="mx-auto"></div>
+            <p id="status-text" class="mt-4 text-lg text-gray-600 font-semibold">Creating your art... this may take a minute.</p>
+        </div>
+
+        <div id="result-container" class="mt-6 border-2 border-dashed border-gray-300 rounded-lg p-4">
+             <h2 class="text-center text-xl font-semibold mb-4 text-gray-700">Your Generated Art</h2>
+             <img id="result-image" src="https://placehold.co/600x400/e2e8f0/e2e8f0?text=+" alt="Stylized result will appear here" class="w-full rounded-md">
+        </div>
+    </div>
+
+    <script>
+      
+        const NGROK_URL = "https://2b37d6ec1ea0.ngrok-free.app";     //PASTE YOUR NEW URL HERE
+        const API_ENDPOINT = `${NGROK_URL}/stylize`;
+        const contentFileInput = document.getElementById('content-file');
+        const styleFileInput = document.getElementById('style-file');
+        const contentPreview = document.getElementById('content-preview');
+        const stylePreview = document.getElementById('style-preview');
+        const stylizeButton = document.getElementById('stylize-button');
+        const statusArea = document.getElementById('status-area');
+        const resultImage = document.getElementById('result-image');
+
+        function setupImagePreview(fileInput, previewElement) {
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    previewElement.src = URL.createObjectURL(file);
+                }
+            });
+        }
+        setupImagePreview(contentFileInput, contentPreview);
+        setupImagePreview(styleFileInput, stylePreview);
+
+        stylizeButton.addEventListener('click', async () => {
+            const contentFile = contentFileInput.files[0];
+            const styleFile = styleFileInput.files[0];
+
+            if (!contentFile || !styleFile) {
+                alert("Please select both a content and a style image!");
+                return;
+            }
+
+            if (NGROK_URL.includes("YOUR_NGROK_URL_HERE")) {
+                alert("Please paste your ngrok URL into the frontend.html file first!");
+                return;
+            }
+
+            statusArea.classList.remove('hidden');
+            resultImage.src = "https://placehold.co/600x400/e2e8f0/e2e8f0?text=+";
+            stylizeButton.disabled = true;
+            stylizeButton.textContent = "Processing...";
+            
+        
+            const formData = new FormData();
+            formData.append('content_file', contentFile);
+            formData.append('style_file', styleFile);
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText} (${response.status})`);
+                }
+                
+                const imageBlob = await response.blob();
+                resultImage.src = URL.createObjectURL(imageBlob);
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("An error occurred. Make sure your Colab server is still running and the URL is correct.");
+            } finally {
+              
+                statusArea.classList.add('hidden');
+                stylizeButton.disabled = false;
+                stylizeButton.textContent = "Create Masterpiece";
+            }
+        });
+    </script>
+</body>
+</html>
+
