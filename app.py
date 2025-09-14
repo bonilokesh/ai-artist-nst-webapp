@@ -1,5 +1,5 @@
 
-NGROK_AUTH_TOKEN = "32g2YEgciYJfyDy2RkaKakUdNfe_7wFRd8p8daHT2RDMWx7Xa"
+NGROK_AUTH_TOKEN = "add your nrok auth token"
 
 import tensorflow as tf
 import numpy as np
@@ -159,4 +159,5 @@ if __name__ == '__main__':
         
         print("Starting Flask server...")
         app.run(port=port)
+
 
