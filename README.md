@@ -8,7 +8,7 @@ This project uses a **client-server architecture**:
 
 ---
 
-## 🚀 Features
+## 🚀 Features 
 - Upload a **content image** (photo).  
 - Upload a **style image** (painting).  
 - Generate an **artistic masterpiece** combining both.  
